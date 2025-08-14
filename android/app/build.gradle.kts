@@ -1,10 +1,11 @@
 import java.util.Properties
 import java.io.FileInputStream
 
+val keyPropertiesFile = rootProject.file("key.properties")
+val keyProperties = Properties()
 
-val keyProperties = Properties().apply {
-    val keyPropertiesFile = rootProject.file("key.properties")
-    load(FileInputStream(keyPropertiesFile))
+if (keyPropertiesFile.exists()) {
+    keyProperties.load(FileInputStream(keyPropertiesFile))
 }
 
 plugins {
@@ -43,19 +44,26 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            keyAlias = keyProperties["keyAlias"] as String
-            keyPassword = keyProperties["keyPassword"] as String
-            storeFile = File(rootProject.projectDir, "${keyProperties["storeFile"]}")
-            storePassword = keyProperties["storePassword"] as String
+        if (keyPropertiesFile.exists()) {
+            create("release") {
+                keyAlias = keyProperties["keyAlias"] as String
+                keyPassword = keyProperties["keyPassword"] as String
+                storeFile = File(rootProject.projectDir, "${keyProperties["storeFile"]}")
+                storePassword = keyProperties["storePassword"] as String
+            }
         }
     }
 
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("release")
+            if (keyPropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = false
             isShrinkResources = false
+        }
+        getByName("debug") {
+            isDebuggable = true
         }
     }
 
